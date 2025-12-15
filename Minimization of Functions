@@ -1,0 +1,95 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+# ---------------------------------------------
+# 1. Define the function
+# ---------------------------------------------
+def f(x):
+    return x**2 + np.sin(53*x)
+
+# ---------------------------------------------
+# 2. Basic brute-force scan (to see global vs local minima)
+# ---------------------------------------------
+x_vals = np.linspace(-2, 2, 50000)
+y_vals = f(x_vals)
+
+global_min_x = x_vals[np.argmin(y_vals)]
+global_min_y = np.min(y_vals)
+
+print("=== Brute-force Scan Result ===")
+print(f"Global minimum approx at x = {global_min_x:.6f}, f(x) = {global_min_y:.6f}")
+
+# ---------------------------------------------
+# 3. Golden Section Search
+# ---------------------------------------------
+def golden_section_search(a, b, tol=1e-6):
+    gr = (np.sqrt(5) - 1) / 2  # golden ratio constant ~0.618
+    c = b - gr*(b - a)
+    d = a + gr*(b - a)
+
+    while abs(c - d) > tol:
+        if f(c) < f(d):
+            b = d
+        else:
+            a = c
+        c = b - gr*(b - a)
+        d = a + gr*(b - a)
+
+    return (b + a) / 2
+
+golden_min_x = golden_section_search(-2, 2)
+print("\n=== Golden Section Search ===")
+print(f"Golden-section minimum x = {golden_min_x:.6f}, f(x) = {f(golden_min_x):.6f}")
+
+# ---------------------------------------------
+# 4. Fibonacci Search
+# ---------------------------------------------
+def fibonacci(n):
+    F = [0,1]
+    for i in range(2,n+1):
+        F.append(F[-1] + F[-2])
+    return F
+
+def fibonacci_search(a, b, tol=1e-6):
+    # choose n so that Fn > (b-a)/tol
+    n = 1
+    while fibonacci(n)[-1] < (b-a)/tol:
+        n += 1
+
+    F = fibonacci(n)
+    
+    k = 0
+    c = a + (F[n-2]/F[n])*(b-a)
+    d = a + (F[n-1]/F[n])*(b-a)
+    
+    while k < n-2:
+        if f(c) < f(d):
+            b = d
+            d = c
+            c = a + (F[n-k-3]/F[n-k-1])*(b-a)
+        else:
+            a = c
+            c = d
+            d = a + (F[n-k-2]/F[n-k-1])*(b-a)
+        k += 1
+    
+    return (a + b)/2
+
+fib_min_x = fibonacci_search(-2, 2)
+print("\n=== Fibonacci Search ===")
+print(f"Fibonacci minimum x = {fib_min_x:.6f}, f(x) = {f(fib_min_x):.6f}")
+
+# ---------------------------------------------
+# 5. Plot the function and mark minima
+# ---------------------------------------------
+plt.figure(figsize=(10,5))
+plt.plot(x_vals, y_vals)
+plt.scatter(global_min_x, global_min_y, color='red', label='Global minimum (scan)')
+plt.scatter(golden_min_x, f(golden_min_x), color='green', label='Golden-section min')
+plt.scatter(fib_min_x, f(fib_min_x), color='purple', label='Fibonacci min')
+plt.legend()
+plt.xlabel("x")
+plt.ylabel("f(x)")
+plt.title("Function f(x) = x^2 + sin(53x)\nGlobal vs Local Minima and Search Methods")
+plt.grid(True)
+plt.show()
