@@ -1,4 +1,6 @@
 #bisection method of f(x)=2-e^x interval [0,1]
+
+import numpy as np
 def f(x):
     return 2-np.exp(x)
 
