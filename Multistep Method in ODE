@@ -1,0 +1,42 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Define the ODE
+def f(x, y):
+    return y - x**2 + 1
+
+# Exact solution for comparison
+def y_exact(x):
+    return (x + 1)**2 - 0.5 * np.exp(x)
+
+# Parameters
+h = 0.1
+x = np.arange(0, 2 + h, h)
+y = np.zeros(len(x))
+
+# Initial condition
+y[0] = 0.5
+
+# Use RK4 for the first step
+def rk4_step(f, x_n, y_n, h):
+    k1 = f(x_n, y_n)
+    k2 = f(x_n + h/2, y_n + h/2 * k1)
+    k3 = f(x_n + h/2, y_n + h/2 * k2)
+    k4 = f(x_n + h, y_n + h * k3)
+    return y_n + h/6 * (k1 + 2*k2 + 2*k3 + k4)
+
+y[1] = rk4_step(f, x[0], y[0], h)
+
+# Apply 2-step Adams-Bashforth
+for n in range(1, len(x) - 1):
+    y[n+1] = y[n] + h/2 * (3*f(x[n], y[n]) - f(x[n-1], y[n-1]))
+
+# Plot
+plt.plot(x, y, 'bo-', label="Adams-Bashforth 2-step")
+plt.plot(x, y_exact(x), 'r', label="Exact")
+plt.xlabel("x")
+plt.ylabel("y")
+plt.legend()
+plt.title("Solving ODE with 2-Step Adams-Bashforth Method")
+plt.grid(True)
+plt.show()
