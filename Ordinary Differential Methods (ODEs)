@@ -1,0 +1,61 @@
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+def f(x, y): return -2*x*y**2
+def y_exact(x): return 1.0 / (1.0 + x**2)
+
+h = 0.25
+x_vals = np.arange(0, 0.5 + 1e-12, h)
+
+# Euler
+y_e = np.zeros_like(x_vals); y_e[0]=1.0
+for i in range(1,len(x_vals)):
+    y_e[i] = y_e[i-1] + h * f(x_vals[i-1], y_e[i-1])
+
+# Midpoint (explicit)
+y_m = np.zeros_like(x_vals); y_m[0]=1.0
+for i in range(1,len(x_vals)):
+    k1 = f(x_vals[i-1], y_m[i-1])
+    y_mid = y_m[i-1] + 0.5*h*k1
+    k2 = f(x_vals[i-1] + 0.5*h, y_mid)
+    y_m[i] = y_m[i-1] + h * k2
+
+# Heun (RK2 - improved Euler)
+y_h = np.zeros_like(x_vals); y_h[0]=1.0
+for i in range(1,len(x_vals)):
+    k1 = f(x_vals[i-1], y_h[i-1])
+    y_pred = y_h[i-1] + h*k1
+    k2 = f(x_vals[i-1] + h, y_pred)
+    y_h[i] = y_h[i-1] + 0.5*h*(k1 + k2)
+
+# RK4
+y_rk4 = np.zeros_like(x_vals); y_rk4[0]=1.0
+for i in range(1,len(x_vals)):
+    x = x_vals[i-1]; y0 = y_rk4[i-1]
+    k1 = f(x, y0)
+    k2 = f(x + 0.5*h, y0 + 0.5*h*k1)
+    k3 = f(x + 0.5*h, y0 + 0.5*h*k2)
+    k4 = f(x + h, y0 + h*k3)
+    y_rk4[i] = y0 + (h/6.0)*(k1 + 2*k2 + 2*k3 + k4)
+
+# Exact
+y_ex = y_exact(x_vals)
+
+# Print table
+print("x, Exact, Euler, Err_Euler, Midpoint, Err_Mid, Heun, Err_Heun, RK4, Err_RK4")
+for i,x in enumerate(x_vals):
+    print(f"{x:.2f}, {y_ex[i]:.6f}, {y_e[i]:.6f}, {abs(y_e[i]-y_ex[i]):.6f}, "
+          f"{y_m[i]:.6f}, {abs(y_m[i]-y_ex[i]):.6f}, {y_h[i]:.6f}, {abs(y_h[i]-y_ex[i]):.6f}, "
+          f"{y_rk4[i]:.6f}, {abs(y_rk4[i]-y_ex[i]):.6f}")
+
+# Plot
+xs_dense = np.linspace(0,0.5,200)
+plt.plot(xs_dense, y_exact(xs_dense), label='Exact', linewidth=2)
+plt.plot(x_vals, y_e, 'o--', label='Euler')
+plt.plot(x_vals, y_m, 's--', label='Midpoint (RK2)')
+plt.plot(x_vals, y_h, 'd--', label='Heun (RK2)')
+plt.plot(x_vals, y_rk4, 'v--', label='RK4')
+plt.xlabel('x'); plt.ylabel('y'); plt.title('ODE approximations (h=0.25)')
+plt.legend(); plt.grid(True); plt.show()
+
