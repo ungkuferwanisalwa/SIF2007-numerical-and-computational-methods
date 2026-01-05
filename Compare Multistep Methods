@@ -1,0 +1,70 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# ODE definition
+def f(y):
+    return -1000*y
+
+def exact(t):
+    return np.exp(-1000*t)
+
+# Time grid
+h = 0.001
+t = np.arange(0, 0.01 + h, h)
+n = len(t)
+
+# Allocate arrays
+y_ab = np.zeros(n)
+y_am = np.zeros(n)
+y_bdf = np.zeros(n)
+
+# Initial conditions (exact start-up)
+y_ab[0] = y_am[0] = y_bdf[0] = 1.0
+y_ab[1] = y_am[1] = y_bdf[1] = exact(h)
+
+# Adams–Bashforth 2-step (explicit)
+for i in range(1, n-1):
+    y_ab[i+1] = y_ab[i] + h * (1.5*f(y_ab[i]) - 0.5*f(y_ab[i-1]))
+
+# Adams–Moulton 2-step (implicit)
+for i in range(1, n-1):
+    rhs = y_am[i] + (h/12)*(8*f(y_am[i]) - f(y_am[i-1]))
+    y_am[i+1] = rhs / (1 + (5*h*1000)/12)
+
+# BDF2 (implicit)
+for i in range(1, n-1):
+    y_bdf[i+1] = (4*y_bdf[i] - y_bdf[i-1]) / (3 + 2*h*1000)
+
+# Exact solution
+y_exact = exact(t)
+
+# ------------------------
+# Plot comparison
+# ------------------------
+plt.figure()
+plt.plot(t, y_exact, label="Exact")
+plt.plot(t, y_ab, label="Adams–Bashforth")
+plt.plot(t, y_am, label="Adams–Moulton")
+plt.plot(t, y_bdf, label="BDF")
+plt.xlabel("t")
+plt.ylabel("y(t)")
+plt.title("Stiff ODE: Comparison of Multistep Methods")
+plt.legend()
+plt.show()
+
+# ------------------------
+# Error table
+# ------------------------
+df = pd.DataFrame({
+    "t": t,
+    "Exact": y_exact,
+    "Adams–Bashforth": y_ab,
+    "AB Error": np.abs(y_ab - y_exact),
+    "Adams–Moulton": y_am,
+    "AM Error": np.abs(y_am - y_exact),
+    "BDF": y_bdf,
+    "BDF Error": np.abs(y_bdf - y_exact)
+})
+
+print(df)
